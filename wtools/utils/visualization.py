@@ -7,19 +7,23 @@ from typing import Union, List, Tuple
 from matplotlib import pyplot as plt
 
 
-def display_image_grid(images_filepaths, labels=(), cols=5, label_color="green"):
-    rows = len(images_filepaths) // cols
-    figure, ax = plt.subplots(nrows=rows, ncols=cols, figsize=(12, 6))
-    for i, image_filepath in enumerate(images_filepaths):
-        image = cv2.imread(image_filepath)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        color = label_color
-        label = labels[i]
-        ax.ravel()[i].imshow(image)
-        ax.ravel()[i].set_title(label, color=color)
-        ax.ravel()[i].set_axis_off()
-    plt.tight_layout()
-    plt.show()
+def display_image_grid(images, cols=5, max_num=100):
+    images = images[:max_num]
+    rows = len(images) // cols
+    crop_size = 112
+    canvas = np.zeros((rows * crop_size, cols * crop_size, 3), dtype=np.uint8)
+    for i, image in enumerate(images):
+        if isinstance(image, str):
+            image = cv2.imread(image)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.resize(image, (crop_size, crop_size))
+        row = i // cols
+        col = i % cols
+        canvas[
+            row * crop_size : (row + 1) * crop_size,
+            col * crop_size : (col + 1) * crop_size,
+        ] = image
+    return canvas
 
 
 def draw_bbox(
@@ -67,6 +71,8 @@ def draw_keypoints(
     diameter=None,
     use_index=False,
     font=cv2.FONT_HERSHEY_SIMPLEX,
+    font_scale=1,
+    thickness=1,
     draw=False,
 ):
     """
@@ -86,7 +92,7 @@ def draw_keypoints(
         x, y = int(x), int(y)
         cv2.circle(image, (x, y), diameter, color, -1)
         if use_index:
-            cv2.putText(image, str(i), (x + 5, y + 5), font, 1, (255, 0, 0))
+            cv2.putText(image, str(i), (x + 5, y + 5), font, font_scale, (255, 0, 0))
 
     if draw:
         plt.figure(figsize=(8, 8))

@@ -7,22 +7,37 @@ import math
 from typing import Union, List, Tuple
 
 
+def preprocess(pts, expand_ratio=1.3, crop_size=112):
+    lo = pts.min(axis=0)
+    hi = pts.max(axis=0)
+    center = (lo + hi) / 2
+    size = (hi - lo).max() * expand_ratio
+    lo = center - size / 2
+    hi = center + size / 2
+    pts = pts - lo.reshape(-1, 2)
+    scale = size / crop_size
+    pts = pts / scale
+    return pts
+
+
 def calculate_pitch_yaw_roll(
-    landmarks_2D: Union[List, np.ndarray], cam_w: int = 256, cam_h: int = 256
+    landmarks_2D: Union[List, np.ndarray]
 ) -> Tuple[float, float, float]:
     """Calculating headpose according to facial landmark
     reference: https://github.com/guoqiangqi/PFLD/blob/master/euler_angles_utils.py
 
     Arguments:
-        landmarks_2D {Union[List, np.ndarray]} -- 2d landmarks, should in [LEFT_EYEBROW_LEFT, LEFT_EYEBROW_RIGHT, RIGHT_EYEBROW_LEFT, RIGHT_EYEBROW_RIGHT, LEFT_EYE_LEFT, LEFT_EYE_RIGHT, RIGHT_EYE_LEFT, RIGHT_EYE_RIGHT, NOSE_LEFT, NOSE_RIGHT, MOUTH_LEFT, MOUTH_RIGHT, LOWER_LIP, CHIN] order
-
-    Keyword Arguments:
-        cam_w {int} -- 成像平面宽度 (default: {256})
-        cam_h {int} -- 成像平面高度 (default: {256})
+        landmarks_2D {Union[List, np.ndarray]} -- 2d landmarks, should in 
+        [LEFT_EYEBROW_LEFT, LEFT_EYEBROW_RIGHT, RIGHT_EYEBROW_LEFT, RIGHT_EYEBROW_RIGHT, 
+        LEFT_EYE_LEFT, LEFT_EYE_RIGHT, RIGHT_EYE_LEFT, RIGHT_EYE_RIGHT, 
+        NOSE_LEFT, NOSE_RIGHT, MOUTH_LEFT, MOUTH_RIGHT, LOWER_LIP, CHIN] order
 
     Returns:
         Tuple[float, float, float] -- Head pose (pitch, yaw, roll)
     """
+
+    cam_w = cam_h = 112
+    landmarks_2D = preprocess(landmarks_2D, expand_ratio=1.3, crop_size=cam_w)
     c_x = cam_w / 2
     c_y = cam_h / 2
     f_x = c_x / np.tan(60 / 2 * np.pi / 180)
