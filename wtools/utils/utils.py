@@ -3,6 +3,7 @@
 
 from IPython import get_ipython
 
+
 # 判断当前执行环境是否是notebook
 def isnotebook() -> bool:
     """判断当前执行环境是否是notebook

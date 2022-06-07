@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import pickle as pkl
 import json
+import pickle as pkl
+
 import numpy as np
 import yaml
 

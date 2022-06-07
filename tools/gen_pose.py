@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from email.policy import default
 import os
+from collections import defaultdict
+from email.policy import default
+
 import click
 import numpy as np
 from tqdm import tqdm
-from collections import defaultdict
-from wtools.utils import load_pts, dump_json
+
 from wtools.landmark import calculate_pitch_yaw_roll
+from wtools.utils import dump_json, load_pts
 
 
 @click.command()

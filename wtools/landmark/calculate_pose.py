@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import math
+from typing import List, Tuple, Union
+
 import cv2
 import numpy as np
-import math
-from typing import Union, List, Tuple
 
 
 def preprocess(pts, expand_ratio=1.3, crop_size=112):

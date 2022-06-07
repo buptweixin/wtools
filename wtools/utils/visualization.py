@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
+from typing import List, Tuple, Union
+
 import cv2
 import numpy as np
-from typing import Union, List, Tuple
 from matplotlib import pyplot as plt
 
 
