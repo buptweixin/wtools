@@ -2,10 +2,156 @@
 # -*- coding: utf-8 -*-
 
 import json
+import lmdb
 import pickle as pkl
+from pathlib import Path
+from collections import MutableMapping
+from nbformat import write
 
 import numpy as np
 import yaml
+
+
+class MissingOk:
+
+    # for python < 3.8 compatibility
+
+    def __init__(self, ok: bool) -> None:
+
+        self.ok = ok
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if isinstance(exc_value, FileNotFoundError) and self.ok:
+            return True
+
+
+def remove_lmdbm(file: str, missing_ok: bool = True) -> None:
+
+    base = Path(file)
+    with MissingOk(missing_ok):
+        (base / "data.mdb").unlink()
+    with MissingOk(missing_ok):
+        (base / "lock.mdb").unlink()
+    with MissingOk(missing_ok):
+        base.rmdir()
+
+
+class LMDB(MutableMapping):
+    # reference: https://github.com/Dobatymo/lmdb-python-dbm/blob/master/lmdbm/lmdbm.py#L185
+    def __init__(self, env) -> None:
+        self.env = env
+
+    @classmethod
+    def open(cls, path, flag="r", mode=0o755, map_size=1e12):
+        if flag == "r":  # Open existing database for reading only (default)
+            env = lmdb.open(
+                path,
+                map_size=map_size,
+                max_dbs=1,
+                readonly=True,
+                create=False,
+                mode=mode,
+            )
+        elif flag == "w":  # Open existing database for reading and writing
+            env = lmdb.open(
+                path,
+                map_size=map_size,
+                max_dbs=1,
+                readonly=False,
+                create=False,
+                mode=mode,
+            )
+        elif (
+            flag == "c"
+        ):  # Open database for reading and writing, creating it if it doesn't exist
+            env = lmdb.open(
+                path,
+                map_size=map_size,
+                max_dbs=1,
+                readonly=False,
+                create=True,
+                mode=mode,
+            )
+        elif (
+            flag == "n"
+        ):  # Always create a new, empty database, open for reading and writing
+            remove_lmdbm(path)
+            env = lmdb.open(
+                path,
+                map_size=map_size,
+                max_dbs=1,
+                readonly=False,
+                create=True,
+                mode=mode,
+            )
+        else:
+            raise ValueError("Invalid flag")
+
+        return cls(env)
+
+    @property
+    def map_size(self) -> int:
+
+        return self.env.info()["map_size"]
+
+    @map_size.setter
+    def map_size(self, value: int) -> None:
+        self.env.set_mapsize(value)
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            key = key.encode()
+        with self.env.begin() as txn:
+            value = txn.get(key)
+        if value is None:
+            raise KeyError(key)
+        return value
+
+    def __setitem__(self, key, value):
+        with self.env.begin(write=True) as txn:
+            txn.put(key, value)
+
+    def __delitem__(self, key) -> None:
+        with self.env.begin(write=True) as txn:
+            txn.delete(key)
+
+    def update(self, key, value):
+        with self.env.begin(write=True) as txn:
+            txn.replace(key, value)
+
+    def keys(self):
+        with self.env.begin() as txn:
+            for key in txn.cursor().iternext(keys=True, values=False):
+                yield key
+
+    def values(self):
+        with self.env.begin() as txn:
+            for value in txn.cursor().iternext(keys=False, values=True):
+                yield value
+
+    def items(self):
+        with self.env.begin() as txn:
+            for key, value in txn.cursor().iternext(keys=True, values=False):
+                yield (key, value)
+
+    def __len__(self) -> int:
+        with self.env.begin() as txn:
+            return txn.stat()["entries"]
+
+    def sync(self):
+        self.env.sync()
+
+    def close(self):
+        self.env.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
 
 
 def load_pickle(path: str, verbose=False):
