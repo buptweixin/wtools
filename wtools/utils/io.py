@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import json
-import pickle as pkl
-from collections import MutableMapping
-from pathlib import Path
-
 import lmdb
+import pickle as pkl
+from pathlib import Path
+from collections import MutableMapping
+
 import numpy as np
 import yaml
-from nbformat import write
+from typing import Generic, Iterator, TypeVar, Tuple
+
+T = TypeVar("T")
+KT = TypeVar("KT")
+VT = TypeVar("VT")
 
 
 class MissingOk:
@@ -17,7 +21,6 @@ class MissingOk:
     # for python < 3.8 compatibility
 
     def __init__(self, ok: bool) -> None:
-
         self.ok = ok
 
     def __enter__(self):
@@ -39,13 +42,9 @@ def remove_lmdbm(file: str, missing_ok: bool = True) -> None:
         base.rmdir()
 
 
-class LMDB(MutableMapping):
+class LMDB(MutableMapping, Generic[KT, VT]):
     # reference: https://github.com/Dobatymo/lmdb-python-dbm/blob/master/lmdbm/lmdbm.py#L185
-    def __init__(self, env) -> None:
-        self.env = env
-
-    @classmethod
-    def open(cls, path, flag="r", mode=0o755, map_size=1e12):
+    def __init__(self, path, flag="r", mode=0o755, map_size=1e12) -> None:
         if flag == "r":  # Open existing database for reading only (default)
             env = lmdb.open(
                 path,
@@ -89,57 +88,80 @@ class LMDB(MutableMapping):
             )
         else:
             raise ValueError("Invalid flag")
-
-        return cls(env)
+        self.env = env
 
     @property
     def map_size(self) -> int:
 
         return self.env.info()["map_size"]
 
+    def _pre_key(self, key: KT) -> bytes:
+        if isinstance(key, bytes):
+            return key
+        elif isinstance(key, str):
+            return key.encode("Latin-1")
+
+        raise TypeError(key)
+
+    def _post_key(self, key: bytes) -> KT:
+        return key
+
+    def _pre_value(self, value: VT) -> bytes:
+        if isinstance(value, bytes):
+            return value
+        elif isinstance(value, str):
+            return value.encode("Latin-1")
+        raise TypeError(value)
+
+    def _post_value(self, value: bytes) -> VT:
+        return value
+
     @map_size.setter
     def map_size(self, value: int) -> None:
         self.env.set_mapsize(value)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: KT) -> VT:
         if isinstance(key, str):
             key = key.encode()
         with self.env.begin() as txn:
-            value = txn.get(key)
+            value = txn.get(self._pre_key(key))
         if value is None:
             raise KeyError(key)
-        return value
+        return self._post_value(value)
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: KT, value: VT):
         with self.env.begin(write=True) as txn:
-            txn.put(key, value)
+            txn.put(self._pre_key(key), self._pre_value(value))
 
-    def __delitem__(self, key) -> None:
+    def __delitem__(self, key: KT) -> None:
         with self.env.begin(write=True) as txn:
-            txn.delete(key)
+            txn.delete(self._pre_key(key))
 
-    def update(self, key, value):
+    def update(self, key: KT, value: VT):
         with self.env.begin(write=True) as txn:
-            txn.replace(key, value)
+            txn.replace(self._pre_key(key), self._pre_value(value))
 
     def keys(self):
         with self.env.begin() as txn:
             for key in txn.cursor().iternext(keys=True, values=False):
-                yield key
+                yield self._post_key(key)
 
     def values(self):
         with self.env.begin() as txn:
             for value in txn.cursor().iternext(keys=False, values=True):
-                yield value
+                yield self._post_value(value)
 
-    def items(self):
+    def items(self) -> Iterator[Tuple[KT, VT]]:
         with self.env.begin() as txn:
-            for key, value in txn.cursor().iternext(keys=True, values=False):
-                yield (key, value)
+            for key, value in txn.cursor().iternext(keys=True, values=True):
+                yield (self._post_key(key), self._post_value(value))
 
     def __len__(self) -> int:
         with self.env.begin() as txn:
             return txn.stat()["entries"]
+
+    def __iter__(self):
+        return self.keys()
 
     def sync(self):
         self.env.sync()
