@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import json
-import lmdb
 import pickle as pkl
-from pathlib import Path
 from collections import MutableMapping
-from nbformat import write
+from pathlib import Path
 
+import lmdb
 import numpy as np
 import yaml
+from nbformat import write
 
 
 class MissingOk:
@@ -17,7 +17,6 @@ class MissingOk:
     # for python < 3.8 compatibility
 
     def __init__(self, ok: bool) -> None:
-
         self.ok = ok
 
     def __enter__(self):
