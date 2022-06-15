@@ -28,9 +28,9 @@ def calculate_pitch_yaw_roll(
     reference: https://github.com/guoqiangqi/PFLD/blob/master/euler_angles_utils.py
 
     Arguments:
-        landmarks_2D {Union[List, np.ndarray]} -- 2d landmarks, should in 
-        [LEFT_EYEBROW_LEFT, LEFT_EYEBROW_RIGHT, RIGHT_EYEBROW_LEFT, RIGHT_EYEBROW_RIGHT, 
-        LEFT_EYE_LEFT, LEFT_EYE_RIGHT, RIGHT_EYE_LEFT, RIGHT_EYE_RIGHT, 
+        landmarks_2D {Union[List, np.ndarray]} -- 2d landmarks, should in
+        [LEFT_EYEBROW_LEFT, LEFT_EYEBROW_RIGHT, RIGHT_EYEBROW_LEFT, RIGHT_EYEBROW_RIGHT,
+        LEFT_EYE_LEFT, LEFT_EYE_RIGHT, RIGHT_EYE_LEFT, RIGHT_EYE_RIGHT,
         NOSE_LEFT, NOSE_RIGHT, MOUTH_LEFT, MOUTH_RIGHT, LOWER_LIP, CHIN] order
 
     Returns:

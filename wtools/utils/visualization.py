@@ -69,6 +69,7 @@ def draw_keypoints(
     image,
     keypoints,
     color=(0, 255, 0),
+    font_color=(255, 0, 0),
     diameter=None,
     use_index=False,
     font=cv2.FONT_HERSHEY_SIMPLEX,
@@ -93,7 +94,7 @@ def draw_keypoints(
         x, y = int(x), int(y)
         cv2.circle(image, (x, y), diameter, color, -1)
         if use_index:
-            cv2.putText(image, str(i), (x + 5, y + 5), font, font_scale, (255, 0, 0))
+            cv2.putText(image, str(i), (x + 5, y + 5), font, font_scale, font_color)
 
     if draw:
         plt.figure(figsize=(8, 8))
