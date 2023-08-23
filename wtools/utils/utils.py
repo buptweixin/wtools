@@ -14,7 +14,7 @@ import os
 import time
 import psutil
 
-// ref: https://github.com/ppwwyyxx/RAM-multiprocess-dataloader/blob/main/common.py 
+#  ref: https://github.com/ppwwyyxx/RAM-multiprocess-dataloader/blob/main/common.py 
 def get_mem_info(pid: int) -> dict[str, int]:
   res = defaultdict(int)
   for mmap in psutil.Process(pid).memory_maps():

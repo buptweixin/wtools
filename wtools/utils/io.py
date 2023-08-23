@@ -3,7 +3,10 @@
 
 import json
 import pickle as pkl
-from collections import MutableMapping
+try:
+    from collections import MutableMapping
+except ImportError as e:
+    from collections.abc import MutableMapping
 from pathlib import Path
 
 import lmdb
