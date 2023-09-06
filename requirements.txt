@@ -1,2 +1,11 @@
-matplotlib==3.5.1
-opencv_python==4.5.5.62
+click
+ipython
+lmdb
+matplotlib
+numpy
+psutil
+PyYAML
+setuptools
+tabulate
+tqdm
+opencv-python
