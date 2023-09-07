@@ -4,14 +4,14 @@
 from IPython import get_ipython
 
 from collections import defaultdict
-from typing import Any
+from typing import Any, Dict, List
 from tabulate import tabulate
 import os
 import time
 import psutil
 
 #  ref: https://github.com/ppwwyyxx/RAM-multiprocess-dataloader/blob/main/common.py 
-def get_mem_info(pid: int) -> dict[str, int]:
+def get_mem_info(pid: int) -> Dict[str, int]:
   res = defaultdict(int)
   for mmap in psutil.Process(pid).memory_maps():
     res['rss'] += mmap.rss
@@ -24,7 +24,7 @@ def get_mem_info(pid: int) -> dict[str, int]:
 
 
 class MemoryMonitor():
-  def __init__(self, pids: list[int] = None):
+  def __init__(self, pids: List[int] = None):
     if pids is None:
       pids = [os.getpid()]
     self.pids = pids
