@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=56.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wtools"
+description = "some useful tools for computer vision."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Arno Wei", email = "weixin.bupt.ml@gmail.com" }
+]
+keywords = ["computer vision", "tools", "landmark", "pose"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+dynamic = ["version"]
+dependencies = [
+    "click",
+    "ipython",
+    "lmdb",
+    "matplotlib",
+    "numpy",
+    "psutil",
+    "PyYAML",
+    "setuptools",
+    "tabulate",
+    "tqdm",
+    "opencv-python",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+    "mypy",
+]
+
+[project.urls]
+Homepage = "https://github.com/buptweixin/wtools"
+Repository = "https://github.com/buptweixin/wtools"
+
+[project.scripts]
+gen-pose = "tools.gen_pose:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "wtools.__version__.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["wtools*", "tools*"]
+exclude = ["tests*", "*.tests", "*.tests.*", "tests.*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+
+# Per-module overrides for third-party libraries without type stubs.
+[[tool.mypy.overrides]]
+module = ["cv2.*", "lmdb.*", "psutil.*", "IPython.*", "tabulate.*", "yaml.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
