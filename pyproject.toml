@@ -45,6 +45,9 @@ dev = [
     "isort",
     "mypy",
 ]
+video = [
+    "av",
+]
 
 [project.urls]
 Homepage = "https://github.com/buptweixin/wtools"
@@ -52,6 +55,7 @@ Repository = "https://github.com/buptweixin/wtools"
 
 [project.scripts]
 gen-pose = "tools.gen_pose:main"
+video-to-bin = "tools.video_to_bin:main"
 
 [tool.setuptools.dynamic]
 version = { attr = "wtools.__version__.__version__" }
@@ -81,7 +85,7 @@ show_error_codes = true
 
 # Per-module overrides for third-party libraries without type stubs.
 [[tool.mypy.overrides]]
-module = ["cv2.*", "lmdb.*", "psutil.*", "IPython.*", "tabulate.*", "yaml.*"]
+module = ["av.*", "cv2.*", "lmdb.*", "psutil.*", "IPython.*", "tabulate.*", "yaml.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

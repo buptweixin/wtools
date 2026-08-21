@@ -29,6 +29,7 @@ The following packages are required (see `requirements.txt`):
 | click | CLI for `gen_pose.py` |
 | tqdm | Progress bars in `gen_pose.py` |
 | ipython | Notebook environment detection |
+| av | Video decoding via PyAV (optional, required for video_to_jpeg_bin) |
 
 ## Features
 
@@ -37,6 +38,7 @@ The following packages are required (see `requirements.txt`):
 - **Visualization** (`wtools.utils.visualization`) -- Draw bounding boxes and keypoints on images, and arrange multiple images into a grid canvas.
 - **Utilities** (`wtools.utils.utils`) -- Multi-process memory monitoring and Jupyter notebook detection.
 - **Head Pose** (`wtools.landmark.calculate_pose`) -- Estimate pitch / yaw / roll Euler angles from 2-D facial landmarks via PnP.
+- **Video** (`wtools.utils.video`) -- JPEGBIN1 binary container for pre-extracted JPEG-compressed video frames; includes read, write, and video-to-bin conversion with hardware acceleration support.
 - **CLI Tools** (`tools/`) -- Batch generate head-pose annotations from landmark files.
 
 ## Usage Examples
@@ -150,6 +152,25 @@ TRACKED_POINTS = [33, 38, 50, 46, 60, 64, 68, 72, 55, 59, 76, 82, 85, 16]
 landmarks_2D = landmarks_98[TRACKED_POINTS]
 ```
 
+### Video (`wtools.utils.video`)
+
+```python
+from wtools.utils.video import write_jpeg_bin, read_jpeg_bin, video_to_jpeg_bin, read_jpeg_bin_metadata
+
+# Convert a video to JPEGBIN1 format
+meta = video_to_jpeg_bin("input.mp4", "output.bin", sample_fps=2.0, max_size=448)
+
+# Read metadata without decoding frames
+meta = read_jpeg_bin_metadata("output.bin")
+print(f"{meta['nframes']} frames, {meta['width']}x{meta['height']}")
+
+# Read all frames as numpy array
+video, meta, fps = read_jpeg_bin("output.bin")
+
+# Uniformly sample 16 frames
+video, meta, fps = read_jpeg_bin("output.bin", num_frames=16)
+```
+
 ### CLI Tool: `gen_pose.py`
 
 Batch-generate head poses from a list of landmark files and produce a
@@ -175,6 +196,16 @@ Outputs (written to `root_dir`):
 - `<img_pts_list_path>.json` -- pose dict for every entry.
 - `img_pts_list_half_large_pose.txt` -- resampled, pose-balanced list.
 
+### CLI Tool: `video_to_bin.py`
+
+Convert video files to JPEGBIN1 (.bin) format:
+
+```bash
+video-to-bin input.mp4
+video-to-bin input.mp4 -o output.bin --sample-fps 4.0 --max-size 448
+video-to-bin input.mp4 --hwaccel cuda
+```
+
 ## Project Structure
 
 ```
@@ -186,13 +217,15 @@ wtools/
 │   │   ├── io.py                  # File I/O helpers and LMDB wrapper
 │   │   ├── imgproc.py             # Image processing utilities
 │   │   ├── utils.py               # MemoryMonitor and isnotebook
+│   │   ├── video.py               # JPEGBIN1 binary video container
 │   │   └── visualization.py       # Drawing and grid display helpers
 │   └── landmark/                  # Landmark-related modules
 │       ├── __init__.py
 │       └── calculate_pose.py      # Head pose estimation from 2-D landmarks
 ├── tools/                         # CLI tools
 │   ├── __init__.py
-│   └── gen_pose.py                # Batch pose generation CLI
+│   ├── gen_pose.py                # Batch pose generation CLI
+│   └── video_to_bin.py            # Video-to-JPEGBIN1 conversion CLI
 ├── setup.py                       # Package setup script
 ├── requirements.txt               # Python dependencies
 ├── README.md                      # This file
